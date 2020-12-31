@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using UnityEngine.Networking;
 using LitJson;
+using Amazon.Runtime;
 using AWSSignatureV4_S3_Sample.Signers;
 
 namespace GraphQL
@@ -11,32 +12,33 @@ namespace GraphQL
     public class GraphQLClient
     {
         private string url;
+        public ImmutableCredentials Credentials { private get; set; }
 
         public GraphQLClient(string url)
         {
             this.url = url;
         }
 
-        private UnityWebRequest QueryRequest(string query, string token = null)
+        private UnityWebRequest QueryRequest(string query)
         {
             var json = JsonMapper.ToJson(new { query = query });
-            var request = UnityWebRequest.Post(url, UnityWebRequest.kHttpVerbPOST);
+            var request = UnityWebRequest.Post(this.url, UnityWebRequest.kHttpVerbPOST);
             var payload = Encoding.UTF8.GetBytes(json);
-
             var headers = new Dictionary<string, string>
             {
                 { "content-type", "application/json" },
             };
-            if (null != TestScript.ImmutableCredentials)
+
+            request.uploadHandler = new UploadHandlerRaw(payload);
+            if (null != this.Credentials)
             {
                 var contentHash = AWS4SignerBase.CanonicalRequestHashAlgorithm.ComputeHash(payload);
                 var contentHashString = AWS4SignerBase.ToHexString(contentHash, true);
 
                 headers.Add(AWS4SignerBase.X_Amz_Content_SHA256, contentHashString);
-
                 var signer = new AWS4SignerForAuthorizationHeader
                 {
-                    EndpointUri = new Uri(url),
+                    EndpointUri = new Uri(this.url),
                     HttpMethod = "POST",
                     Service = "execute-api",
                     Region = "us-east-1"
@@ -44,51 +46,40 @@ namespace GraphQL
                 var authorization = signer.ComputeSignature(headers,
                                                             string.Empty,
                                                             contentHashString,
-                                                            TestScript.ImmutableCredentials.AccessKey,
-                                                            TestScript.ImmutableCredentials.SecretKey);
+                                                            this.Credentials.AccessKey,
+                                                            this.Credentials.SecretKey);
                 headers.Add("Authorization", authorization);
                 headers.Remove("Host");
 
-                // Add the IAM authentication token
-                request.SetRequestHeader("x-amz-security-token", TestScript.ImmutableCredentials.Token);
+                request.SetRequestHeader("x-amz-security-token", this.Credentials.Token);   // Add the IAM authentication token
             }
             foreach (var header in headers)
             {
                 request.SetRequestHeader(header.Key, header.Value);
             }
 
-            request.uploadHandler = new UploadHandlerRaw(payload);
-
             return request;
         }
 
-        private IEnumerator SendRequest(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10, string token = null)
+        private IEnumerator SendRequest(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10)
         {
-            using (var www = QueryRequest(query, token))
+            using (var www = QueryRequest(query))
             {
                 www.timeout = timeoutSeconds;
                 yield return www.SendWebRequest();
-                if (www.isNetworkError)
+
+                var text = (!www.isNetworkError) ? www.downloadHandler.text : "";
+                var error = (www.isNetworkError) ? www.error : null;
+                if (null != callback)
                 {
-                    if (callback != null)
-                    {
-                        callback(new GraphQLResponse("", www.error));
-                    }
-                }
-                else
-                {
-                    if (null != callback)
-                    {
-                        var text = www.downloadHandler.text;
-                        callback(new GraphQLResponse(text));
-                    }
+                    callback(new GraphQLResponse(text, error));
                 }
             }
         }
 
-        public void Query(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10, string token = "")
+        public void Query(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10)
         {
-            Coroutiner.StartCoroutine(SendRequest(query, callback, timeoutSeconds, token));
+            Coroutiner.StartCoroutine(SendRequest(query, callback, timeoutSeconds));
         }
     }
 }

@@ -13,15 +13,12 @@ public class TestScript : MonoBehaviour
         public string name;
     }
 
-    private CognitoAWSCredentials credentials;
-    public static ImmutableCredentials ImmutableCredentials;
-
     void CognitoInit()
     {
         UnityInitializer.AttachToGameObject(this.gameObject);
         Amazon.AWSConfigs.HttpClient = AWSConfigs.HttpClientOption.UnityWebRequest;
         // Initialize the Amazon Cognito credentials provider
-        credentials = new CognitoAWSCredentials(
+        var credentials = new CognitoAWSCredentials(
             "us-east-1:17291f69-1f95-4f69-976f-20f7a5937b0a", // Identity Pool ID
             Amazon.RegionEndpoint.USEast1 // Region
         );
@@ -33,15 +30,15 @@ public class TestScript : MonoBehaviour
 
     private void CognitoGetCredentialsCallback(AmazonCognitoIdentityResult<ImmutableCredentials> result)
     {
-        if (null == result.Exception)
-        {
-            Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", result.Response.AccessKey, result.Response.SecretKey, result.Response.Token));
-            ImmutableCredentials = result.Response;
-        }
-        else
+        if (null != result.Exception)
         {
             Debug.Log(result.Exception);
+            return;
         }
+        
+        var credentials = result.Response;
+        Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", credentials.AccessKey, credentials.SecretKey, credentials.Token));
+        APIGraphQL.Credentials = credentials;
     }
 
     void mutationSignup()
@@ -60,7 +57,7 @@ public class TestScript : MonoBehaviour
     void callbackSignup(GraphQLResponse response)
     {
         // TODO:: error handling
-        var error = response.HasError();
+        var error = response.GetError();
         if (null != error)
         {
             Debug.Log(error);
@@ -95,7 +92,7 @@ public class TestScript : MonoBehaviour
     void callbackSigninFriends(GraphQLResponse response)
     {
         // TODO:: error handling
-        var error = response.HasError();
+        var error = response.GetError();
         if (null != error)
         {
             Debug.Log(error);

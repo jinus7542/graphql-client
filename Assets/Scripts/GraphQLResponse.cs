@@ -40,7 +40,7 @@ namespace GraphQL
             return (null == data) ? null : data["data"];
         }
 
-        public string HasError()
+        public string GetError()
         {
             if (null != NetworkError)
             {

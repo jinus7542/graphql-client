@@ -64,10 +64,7 @@ crashlytics-build.properties
 Assets/AWSSDK
 Assets/AWSSDK.meta
 Assets/Dependencies/*/*.dll*
-Assets/Dependencies/aws-signature-version-4/Private
-Assets/Dependencies/aws-signature-version-4/Util
-Assets/Dependencies/aws-signature-version-4/*.cs
-Assets/Dependencies/aws-signature-version-4/*.meta
+Assets/Dependencies/NativeWebSocket
 Assets/Dependencies/SignersAndUtilsFromS3SigningExample/Signers
 Assets/Dependencies/SignersAndUtilsFromS3SigningExample/Util
 Assets/Examples
@@ -75,7 +72,6 @@ Assets/Examples.meta
 Assets/FacebookSDK
 Assets/FacebookSDK.meta
 Assets/PlayServicesResolver
-Assets/NativeWebSocket
 Assets/PlayServicesResolver.meta
 Assets/Plugins
 Assets/Plugins.meta
