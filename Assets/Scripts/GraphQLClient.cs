@@ -49,9 +49,8 @@ namespace GraphQL
                                                             this.Credentials.AccessKey,
                                                             this.Credentials.SecretKey);
                 headers.Add("Authorization", authorization);
+                headers.Add("x-amz-security-token", this.Credentials.Token);   // Add the IAM authentication token
                 headers.Remove("Host");
-
-                request.SetRequestHeader("x-amz-security-token", this.Credentials.Token);   // Add the IAM authentication token
             }
             foreach (var header in headers)
             {
