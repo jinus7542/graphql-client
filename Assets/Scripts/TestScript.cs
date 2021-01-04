@@ -35,7 +35,7 @@ public class TestScript : MonoBehaviour
             Debug.Log(result.Exception);
             return;
         }
-        
+
         var credentials = result.Response;
         Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", credentials.AccessKey, credentials.SecretKey, credentials.Token));
         APIGraphQL.Credentials = credentials;
@@ -50,8 +50,7 @@ public class TestScript : MonoBehaviour
                                 name
                             }
                         }".Build(param);
-        var query2 = @"mutation{signup(id:$id,name:$name){id,name}}".Build(param);
-        APIGraphQL.Query(query2, callbackSignup);
+        APIGraphQL.Query(query, callbackSignup);
     }
 
     void callbackSignup(GraphQLResponse response)
