@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Threading.Tasks;
+using UnityEngine;
 using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using LitJson;
+using NativeWebSocket;
 
 public class TestScript : MonoBehaviour
 {
@@ -111,9 +113,24 @@ public class TestScript : MonoBehaviour
         }
     }
 
-    async void subscribe()
+    void OnOpen(string topic)
     {
-        await Broker.Subscribe("topic");
+        Debug.Log($"OnOpen. {topic}");
+    }
+
+    void OnPublish(string json)
+    {
+        Debug.Log($"OnPublish. {json}");
+    }
+
+    void OnError(string error)
+    {
+        Debug.Log($"OnError. {error}");
+    }
+
+    void OnClose(WebSocketCloseCode closeCode)
+    {
+        Debug.Log($"OnClose. {closeCode}");
     }
 
     void OnGUI()
@@ -130,17 +147,17 @@ public class TestScript : MonoBehaviour
         }
         if (GUI.Button(new Rect(20, 100, 120, 20), "subscribe"))
         {
-            subscribe();
+            Task.Run(() => Broker.Subscribe("topic", OnOpen, OnPublish, OnError, OnClose));
         }
     }
 
     void Update()
     {
-        Broker.DispatchMessageQueue();
+        Broker.Dispatch();
     }
 
-    async void OnApplicationQuit()
+    void OnApplicationQuit()
     {
-        await Broker.UnSubscribe();
+        Task.Run(() => Broker.Close());
     }
 }

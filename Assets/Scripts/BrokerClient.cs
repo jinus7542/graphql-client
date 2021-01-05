@@ -1,19 +1,22 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
 using Amazon.Runtime;
 using NativeWebSocket;
 using AWSSignatureV4_S3_Sample.Signers;
+using LitJson;
 
-public class WebSocketClient
+public class BrokerClient
 {
+    private string region;
     private string url;
-    private WebSocket websocket;
+    private WebSocket socket;
     public ImmutableCredentials Credentials { private get; set; }
 
-    public WebSocketClient(string url)
+    public BrokerClient(string url)
     {
+        this.region = url.Split('.')[2];
         this.url = url;
     }
 
@@ -28,7 +31,7 @@ public class WebSocketClient
                 EndpointUri = new Uri(this.url),
                 HttpMethod = "GET",
                 Service = "execute-api",
-                Region = "us-east-1"
+                Region = this.region
             };
             var queryParameters = "";
             if (1 < this.url.Split('?').Length)
@@ -48,50 +51,54 @@ public class WebSocketClient
         return (new WebSocket(this.url, headers));
     }
 
-    public async Task Subscribe(string topic)
+    public async Task Subscribe(string topic, Action<string> onOpen, Action<string> onPublish, Action<string> onError, Action<WebSocketCloseCode> onClose)
     {
-        if (null != this.websocket)
+        if (null != this.socket)
         {
             throw new Exception($"already subscribed.");
         }
 
-        this.websocket = newSocket();
-        this.websocket.OnOpen += () =>
+        this.socket = newSocket();
+        this.socket.OnOpen += () =>
         {
-            Debug.Log("Connection open!");
+            var message = new { action = "send", data = topic };
+            Task.Run(() => this.SendText(JsonMapper.ToJson(message)));
+            onOpen(topic);
         };
-        this.websocket.OnError += (e) =>
+        this.socket.OnMessage += (data) =>
         {
-            Debug.Log("Error! " + e);
+            var json = Encoding.UTF8.GetString(data);
+            onPublish(json);
         };
-        this.websocket.OnClose += (e) =>
+        this.socket.OnError += (error) =>
         {
-            this.websocket = null;
-            Debug.Log("Connection closed!");
+            onError(error);
         };
-        this.websocket.OnMessage += (bytes) =>
+        this.socket.OnClose += (closeCode) =>
         {
-            var message = System.Text.Encoding.UTF8.GetString(bytes);
-            Debug.Log("Received OnMessage! (" + bytes.Length + " bytes) " + message);
+            this.socket = null;
+            onClose(closeCode);
         };
-        await this.websocket.Connect();
+        await this.socket.Connect();
     }
 
-    public void DispatchMessageQueue()
+    public async Task SendText(string message)
+    {
+        if (null != this.socket && WebSocketState.Open == this.socket.State)
+        {
+            await this.socket.SendText(message);
+        }
+    }
+
+    public void Dispatch()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
-        if (null != this.websocket)
-        {
-            this.websocket.DispatchMessageQueue();
-        }
+        this.socket?.DispatchMessageQueue();
 #endif
     }
 
-    public async Task UnSubscribe()
+    public async Task Close()
     {
-        if (null != this.websocket)
-        {
-            await this.websocket.Close();
-        }
+        await this.socket?.Close();
     }
 }

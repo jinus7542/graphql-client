@@ -9,11 +9,13 @@ using AWSSignatureV4_S3_Sample.Signers;
 
 public class GraphQLClient
 {
+    private string region;
     private string url;
     public ImmutableCredentials Credentials { private get; set; }
 
     public GraphQLClient(string url)
     {
+        this.region = url.Split('.')[2];
         this.url = url;
     }
 
@@ -39,7 +41,7 @@ public class GraphQLClient
                 EndpointUri = new Uri(this.url),
                 HttpMethod = "POST",
                 Service = "execute-api",
-                Region = "us-east-1"
+                Region = this.region
             };
             var authorization = signer.ComputeSignature(headers,
                                                         string.Empty,
