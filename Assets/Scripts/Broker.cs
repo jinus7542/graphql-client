@@ -5,7 +5,7 @@ using NativeWebSocket;
 
 public static class Broker
 {
-    private const string url = "wss://23c7rz261g.execute-api.us-east-1.amazonaws.com/stage";
+    private const string url = "wss://h7no5cf5ch.execute-api.us-east-1.amazonaws.com/stage";
     private static BrokerClient client = new BrokerClient(url);
     public static ImmutableCredentials Credentials { set { client.Credentials = value; } }
 

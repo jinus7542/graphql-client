@@ -39,23 +39,11 @@ public class TestScript : MonoBehaviour
 
         var credentials = result.Response;
         Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", credentials.AccessKey, credentials.SecretKey, credentials.Token));
-        API.Credentials = credentials;
+        Api.Credentials = credentials;
         Broker.Credentials = credentials;
     }
 
-    void mutationSignup()
-    {
-        var param = new object[] { 1111, "jinus7542" };
-        var query = @"mutation {
-                            signup(id: $id, name: $name) {
-                                id,
-                                name
-                            }
-                        }".Build(param);
-        API.Query(query, callbackSignup);
-    }
-
-    void callbackSignup(GraphQLResponse response)
+    void callbackSignup(ApiResponse response)
     {
         // TODO:: error handling
         var error = response.GetError();
@@ -74,23 +62,19 @@ public class TestScript : MonoBehaviour
         }
     }
 
-    void querySigninFriends()
+    void mutationSignup()
     {
-        var param = new object[] { 2222 };
-        var query = @"query {
-                            signin(id: $id) {
-                                id,
-                                name
-                            },
-                            friends {
+        var param = new object[] { 1111, "jinus7542" };
+        var query = @"mutation {
+                            signup(id: $id, name: $name) {
                                 id,
                                 name
                             }
                         }".Build(param);
-        API.Query(query, callbackSigninFriends);
+        Api.Query(query, callbackSignup);
     }
 
-    void callbackSigninFriends(GraphQLResponse response)
+    void callbackSigninFriends(ApiResponse response)
     {
         // TODO:: error handling
         var error = response.GetError();
@@ -111,6 +95,22 @@ public class TestScript : MonoBehaviour
             var obj = response.ToObject<User[]>("friends");
             Debug.Log(JsonMapper.ToJson(obj));
         }
+    }
+
+    void querySigninFriends()
+    {
+        var param = new object[] { 2222 };
+        var query = @"query {
+                            signin(id: $id) {
+                                id,
+                                name
+                            },
+                            friends {
+                                id,
+                                name
+                            }
+                        }".Build(param);
+        Api.Query(query, callbackSigninFriends);
     }
 
     void OnOpen(string topic)

@@ -1,13 +1,13 @@
 ﻿using LitJson;
 
-public class GraphQLResponse
+public class ApiResponse
 {
     public string Raw { get; private set; }
     private readonly JsonData data;
     public string NetworkError { get; private set; }
     public string GraphQLError { get; private set; }
 
-    public GraphQLResponse(string text, string error = null)
+    public ApiResponse(string text, string error = null)
     {
         Raw = text;
         NetworkError = error;

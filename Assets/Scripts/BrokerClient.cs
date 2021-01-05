@@ -61,9 +61,9 @@ public class BrokerClient
         this.socket = newSocket();
         this.socket.OnOpen += () =>
         {
-            var message = new { action = "send", data = topic };
-            Task.Run(() => this.SendText(JsonMapper.ToJson(message)));
             onOpen(topic);
+            var obj = new { action = "send", data = topic };
+            Task.Run(() => this.Send(obj));
         };
         this.socket.OnMessage += (data) =>
         {
@@ -82,11 +82,12 @@ public class BrokerClient
         await this.socket.Connect();
     }
 
-    public async Task SendText(string message)
+    public async Task Send(object obj)
     {
         if (null != this.socket && WebSocketState.Open == this.socket.State)
         {
-            await this.socket.SendText(message);
+            var json = JsonMapper.ToJson(obj);
+            await this.socket.SendText(json);
         }
     }
 

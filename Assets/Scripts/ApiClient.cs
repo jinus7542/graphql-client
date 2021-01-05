@@ -7,13 +7,13 @@ using LitJson;
 using Amazon.Runtime;
 using AWSSignatureV4_S3_Sample.Signers;
 
-public class GraphQLClient
+public class ApiClient
 {
     private string region;
     private string url;
     public ImmutableCredentials Credentials { private get; set; }
 
-    public GraphQLClient(string url)
+    public ApiClient(string url)
     {
         this.region = url.Split('.')[2];
         this.url = url;
@@ -60,7 +60,7 @@ public class GraphQLClient
         return request;
     }
 
-    private IEnumerator SendRequest(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10)
+    private IEnumerator SendRequest(string query, Action<ApiResponse> callback = null, int timeoutSeconds = 10)
     {
         using (var www = QueryRequest(query))
         {
@@ -71,12 +71,12 @@ public class GraphQLClient
             var error = (www.isNetworkError) ? www.error : null;
             if (null != callback)
             {
-                callback(new GraphQLResponse(text, error));
+                callback(new ApiResponse(text, error));
             }
         }
     }
 
-    public void Query(string query, Action<GraphQLResponse> callback = null, int timeoutSeconds = 10)
+    public void Query(string query, Action<ApiResponse> callback = null, int timeoutSeconds = 10)
     {
         Coroutiner.StartCoroutine(SendRequest(query, callback, timeoutSeconds));
     }
