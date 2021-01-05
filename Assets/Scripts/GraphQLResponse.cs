@@ -1,61 +1,58 @@
 ﻿using LitJson;
 
-namespace GraphQL
+public class GraphQLResponse
 {
-    public class GraphQLResponse
+    public string Raw { get; private set; }
+    private readonly JsonData data;
+    public string NetworkError { get; private set; }
+    public string GraphQLError { get; private set; }
+
+    public GraphQLResponse(string text, string error = null)
     {
-        public string Raw { get; private set; }
-        private readonly JsonData data;
-        public string NetworkError { get; private set; }
-        public string GraphQLError { get; private set; }
-
-        public GraphQLResponse(string text, string error = null)
+        Raw = text;
+        NetworkError = error;
+        if (null == error)
         {
-            Raw = text;
-            NetworkError = error;
-            if (null == error)
+            var root = JsonMapper.ToObject(text);
+            if (root.Keys.Contains("errors"))
             {
-                var root = JsonMapper.ToObject(text);
-                if (root.Keys.Contains("errors"))
-                {
-                    GraphQLError = JsonMapper.ToJson(root["errors"][0]);
-                    text = null;
-                }
-                if (!root.Keys.Contains("errors") && !root.Keys.Contains("data"))
-                {
-                    GraphQLError = text;
-                    text = null;
-                }
+                GraphQLError = JsonMapper.ToJson(root["errors"][0]);
+                text = null;
             }
-            data = (null != text) ? JsonMapper.ToObject(text) : null;
-        }
-
-        public T ToObject<T>(string resolver)
-        {
-            return JsonMapper.ToObject<T>(GetData()[resolver].ToJson());
-        }
-
-        private JsonData GetData()
-        {
-            return (null == data) ? null : data["data"];
-        }
-
-        public string GetError()
-        {
-            if (null != NetworkError)
+            if (!root.Keys.Contains("errors") && !root.Keys.Contains("data"))
             {
-                return NetworkError;
+                GraphQLError = text;
+                text = null;
             }
-            if (null != GraphQLError)
-            {
-                var error = JsonMapper.ToObject(GraphQLError);
-                if (!error.Keys.Contains("extensions"))
-                {
-                    return GraphQLError;
-                }
-                return (string)error["extensions"]["code"]; // error code
-            }
-            return null;
         }
+        data = (null != text) ? JsonMapper.ToObject(text) : null;
+    }
+
+    public T ToObject<T>(string resolver)
+    {
+        return JsonMapper.ToObject<T>(GetData()[resolver].ToJson());
+    }
+
+    private JsonData GetData()
+    {
+        return (null == data) ? null : data["data"];
+    }
+
+    public string GetError()
+    {
+        if (null != NetworkError)
+        {
+            return NetworkError;
+        }
+        if (null != GraphQLError)
+        {
+            var error = JsonMapper.ToObject(GraphQLError);
+            if (!error.Keys.Contains("extensions"))
+            {
+                return GraphQLError;
+            }
+            return (string)error["extensions"]["code"]; // error code
+        }
+        return null;
     }
 }

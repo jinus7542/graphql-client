@@ -3,7 +3,6 @@ using Amazon;
 using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using LitJson;
-using GraphQL;
 
 public class TestScript : MonoBehaviour
 {
@@ -38,7 +37,8 @@ public class TestScript : MonoBehaviour
 
         var credentials = result.Response;
         Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", credentials.AccessKey, credentials.SecretKey, credentials.Token));
-        APIGraphQL.Credentials = credentials;
+        API.Credentials = credentials;
+        Broker.Credentials = credentials;
     }
 
     void mutationSignup()
@@ -50,7 +50,7 @@ public class TestScript : MonoBehaviour
                                 name
                             }
                         }".Build(param);
-        APIGraphQL.Query(query, callbackSignup);
+        API.Query(query, callbackSignup);
     }
 
     void callbackSignup(GraphQLResponse response)
@@ -65,7 +65,7 @@ public class TestScript : MonoBehaviour
             }
             return;
         }
-        // TODO::
+        // TODO:: implementation
         {
             var obj = response.ToObject<User>("signup");
             Debug.Log(JsonMapper.ToJson(obj));
@@ -85,7 +85,7 @@ public class TestScript : MonoBehaviour
                                 name
                             }
                         }".Build(param);
-        APIGraphQL.Query(query, callbackSigninFriends);
+        API.Query(query, callbackSigninFriends);
     }
 
     void callbackSigninFriends(GraphQLResponse response)
@@ -100,7 +100,7 @@ public class TestScript : MonoBehaviour
             }
             return;
         }
-        // TODO::
+        // TODO:: implementation
         {
             var obj = response.ToObject<User>("signin");
             Debug.Log(JsonMapper.ToJson(obj));
@@ -111,9 +111,14 @@ public class TestScript : MonoBehaviour
         }
     }
 
+    async void subscribe()
+    {
+        await Broker.Subscribe("topic");
+    }
+
     void OnGUI()
     {
-        GUI.Box(new Rect(10, 10, 150, 120), "GraphQL Test");
+        GUI.Box(new Rect(10, 10, 150, 120), "Test");
 
         if (GUI.Button(new Rect(20, 40, 120, 20), "cognito"))
         {
@@ -123,9 +128,19 @@ public class TestScript : MonoBehaviour
         {
             mutationSignup();
         }
-        if (GUI.Button(new Rect(20, 100, 120, 20), "signin and friends"))
+        if (GUI.Button(new Rect(20, 100, 120, 20), "subscribe"))
         {
-            querySigninFriends();
+            subscribe();
         }
+    }
+
+    void Update()
+    {
+        Broker.DispatchMessageQueue();
+    }
+
+    async void OnApplicationQuit()
+    {
+        await Broker.UnSubscribe();
     }
 }
