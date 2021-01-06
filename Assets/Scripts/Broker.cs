@@ -9,7 +9,7 @@ public static class Broker
     private static BrokerClient client = new BrokerClient(url);
     public static ImmutableCredentials Credentials { set { client.Credentials = value; } }
 
-    public async static Task Subscribe(string topic, Action<string> onOpen, Action<string> onPublish, Action<string> onError, Action<WebSocketCloseCode> onClose)
+    public async static Task Subscribe(string topic, Action<string> onOpen, Action<BrokerResponse> onPublish, Action<string> onError, Action<WebSocketCloseCode> onClose)
     {
         await client.Subscribe(topic, onOpen, onPublish, onError, onClose);
     }

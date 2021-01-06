@@ -118,9 +118,9 @@ public class TestScript : MonoBehaviour
         Debug.Log($"OnOpen. {topic}");
     }
 
-    void OnPublish(string json)
+    void OnPublish(BrokerResponse response)
     {
-        Debug.Log($"OnPublish. {json}");
+        Debug.Log($"OnPublish. {response.Raw}");
     }
 
     void OnError(string error)

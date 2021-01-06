@@ -51,7 +51,7 @@ public class BrokerClient
         return (new WebSocket(this.url, headers));
     }
 
-    public async Task Subscribe(string topic, Action<string> onOpen, Action<string> onPublish, Action<string> onError, Action<WebSocketCloseCode> onClose)
+    public async Task Subscribe(string topic, Action<string> onOpen, Action<BrokerResponse> onPublish, Action<string> onError, Action<WebSocketCloseCode> onClose)
     {
         if (null != this.socket)
         {
@@ -68,7 +68,7 @@ public class BrokerClient
         this.socket.OnMessage += (data) =>
         {
             var json = Encoding.UTF8.GetString(data);
-            onPublish(json);
+            onPublish(new BrokerResponse(json));
         };
         this.socket.OnError += (error) =>
         {
