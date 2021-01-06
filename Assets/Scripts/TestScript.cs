@@ -5,6 +5,7 @@ using Amazon.CognitoIdentity;
 using Amazon.Runtime;
 using LitJson;
 using NativeWebSocket;
+using GW;
 
 public class TestScript : MonoBehaviour
 {
@@ -39,11 +40,11 @@ public class TestScript : MonoBehaviour
 
         var credentials = result.Response;
         Debug.Log(string.Format("Cognito credentials: {0},\n{1},\n,{2}", credentials.AccessKey, credentials.SecretKey, credentials.Token));
-        Api.Credentials = credentials;
-        Broker.Credentials = credentials;
+        GW.GraphQL.Credentials = credentials;
+        GW.Subscriber.Credentials = credentials;
     }
 
-    void callbackSignup(ApiResponse response)
+    void callbackSignup(GW.GraphQL.Response response)
     {
         // TODO:: error handling
         var error = response.GetError();
@@ -71,10 +72,10 @@ public class TestScript : MonoBehaviour
                                 name
                             }
                         }".Build(param);
-        Api.Query(query, callbackSignup);
+        GW.GraphQL.Query(query, callbackSignup);
     }
 
-    void callbackSigninFriends(ApiResponse response)
+    void callbackSigninFriends(GW.GraphQL.Response response)
     {
         // TODO:: error handling
         var error = response.GetError();
@@ -110,7 +111,7 @@ public class TestScript : MonoBehaviour
                                 name
                             }
                         }".Build(param);
-        Api.Query(query, callbackSigninFriends);
+        GW.GraphQL.Query(query, callbackSigninFriends);
     }
 
     void OnOpen(string topic)
@@ -118,9 +119,9 @@ public class TestScript : MonoBehaviour
         Debug.Log($"OnOpen. {topic}");
     }
 
-    void OnPublish(BrokerResponse response)
+    void OnMessage(string topic, GW.Subscriber.Message message)
     {
-        Debug.Log($"OnPublish. {response.Raw}");
+        Debug.Log($"OnPublish. {message.Raw}");
     }
 
     void OnError(string error)
@@ -131,6 +132,14 @@ public class TestScript : MonoBehaviour
     void OnClose(WebSocketCloseCode closeCode)
     {
         Debug.Log($"OnClose. {closeCode}");
+    }
+
+    void Start()
+    {
+        GW.Subscriber.OnOpen += OnOpen;
+        GW.Subscriber.OnMessage += OnMessage;
+        GW.Subscriber.OnError += OnError;
+        GW.Subscriber.OnClose += OnClose;
     }
 
     void OnGUI()
@@ -147,17 +156,17 @@ public class TestScript : MonoBehaviour
         }
         if (GUI.Button(new Rect(20, 100, 120, 20), "subscribe"))
         {
-            Task.Run(() => Broker.Subscribe("topic", OnOpen, OnPublish, OnError, OnClose));
+            Task.Run(() => GW.Subscriber.Subscribe("topic"));
         }
     }
 
     void Update()
     {
-        Broker.Dispatch();
+        GW.Subscriber.Dispatch();
     }
 
     void OnApplicationQuit()
     {
-        Task.Run(() => Broker.Close());
+        Task.Run(() => GW.Subscriber.Close());
     }
 }
