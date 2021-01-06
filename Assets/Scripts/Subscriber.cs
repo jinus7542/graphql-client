@@ -11,6 +11,26 @@ namespace GW
 {
     public static class Subscriber
     {
+        public class Message
+        {
+            public string Raw { get; private set; }
+
+            public Message(string json)
+            {
+                Raw = json;
+            }
+
+            public JsonData ToObject()
+            {
+                return JsonMapper.ToObject(Raw);
+            }
+
+            public T ToObject<T>()
+            {
+                return JsonMapper.ToObject<T>(Raw);
+            }
+        }
+
         public delegate void EventHandlerOnOpen(string topic);
         public delegate void EventHandlerOnMessage(string topic, Message message);
         public delegate void EventHandlerOnError(string error);
@@ -118,26 +138,6 @@ namespace GW
             public async Task Close()
             {
                 await this.socket?.Close();
-            }
-        }
-
-        public class Message
-        {
-            public string Raw { get; private set; }
-
-            public Message(string json)
-            {
-                Raw = json;
-            }
-
-            public T ToObject<T>()
-            {
-                return JsonMapper.ToObject<T>(Raw);
-            }
-
-            public JsonData ToObject()
-            {
-                return JsonMapper.ToObject(Raw);
             }
         }
 
