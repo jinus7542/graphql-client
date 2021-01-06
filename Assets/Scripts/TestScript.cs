@@ -144,7 +144,7 @@ public class TestScript : MonoBehaviour
 
     void OnGUI()
     {
-        GUI.Box(new Rect(10, 10, 150, 120), "Test");
+        GUI.Box(new Rect(10, 10, 150, 150), "test");
 
         if (GUI.Button(new Rect(20, 40, 120, 20), "cognito"))
         {
@@ -156,7 +156,11 @@ public class TestScript : MonoBehaviour
         }
         if (GUI.Button(new Rect(20, 100, 120, 20), "subscribe"))
         {
-            Task.Run(() => GW.Subscriber.Subscribe("topic"));
+            Task.Run(() => GW.Subscriber.Subscribe("subscribe"));
+        }
+        if (GUI.Button(new Rect(20, 130, 120, 20), "unsubscribe"))
+        {
+            Task.Run(() => GW.Subscriber.UnSubscribe("unsubscribe"));
         }
     }
 

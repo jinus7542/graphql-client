@@ -88,7 +88,9 @@ namespace GW
             {
                 if (null != this.socket)
                 {
-                    throw new Exception($"already opened.");
+                    var obj = new { action = "send", data = topic };
+                    await this.Send(obj);
+                    return;
                 }
 
                 this.socket = newSocket();
@@ -115,8 +117,10 @@ namespace GW
                 await this.socket.Connect();
             }
 
-            public void UnSubscribe(string topic)
+            public async Task UnSubscribe(string topic)
             {
+                var obj = new { action = "send", data = topic };
+                await this.Send(obj);
             }
 
             public async Task Send(object obj)
@@ -170,9 +174,9 @@ namespace GW
             await client.Subscribe(topic);
         }
 
-        public static void UnSubscribe(string topic)
+        public static async Task UnSubscribe(string topic)
         {
-            client.UnSubscribe(topic);
+            await client.UnSubscribe(topic);
         }
 
         public static void Dispatch()
