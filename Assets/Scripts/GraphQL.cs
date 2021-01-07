@@ -90,10 +90,7 @@ namespace GW
                 var json = JsonMapper.ToJson(new { query = query });
                 var request = UnityWebRequest.Post(this.url, UnityWebRequest.kHttpVerbPOST);
                 var payload = Encoding.UTF8.GetBytes(json);
-                var headers = new Dictionary<string, string>
-            {
-                { "content-type", "application/json" },
-            };
+                var headers = new Dictionary<string, string> { { "content-type", "application/json" }, };
 
                 request.uploadHandler = new UploadHandlerRaw(payload);
                 if (null != this.Credentials)
